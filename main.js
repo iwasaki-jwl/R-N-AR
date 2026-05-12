@@ -208,9 +208,6 @@ faceMesh.setOptions({
 hands.onResults(results => {
   if (!video.videoWidth) return;
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     const landmarks = results.multiHandLandmarks[0];
 
@@ -301,10 +298,15 @@ faceMesh.onResults(results => {
 
 // ===== フレーム処理（Cameraクラス使わない版）=====
 async function renderLoop() {
+    if (video.videoWidth) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+  }
+
    ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (video.readyState >= 2) {
-    await hands.send({ image: video });
     await faceMesh.send({ image: video });
+    await hands.send({ image: video });
   }
   requestAnimationFrame(renderLoop);
 }
