@@ -1,4 +1,4 @@
-const video = document.getElementById('video'); 
+const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
@@ -13,7 +13,7 @@ const orangeRingImg = new Image();
 orangeRingImg.src = "./models/orangeR_5785.PNG";
 
 // ========================================
-// ★ ネックレス画像
+// ネックレス画像
 // ========================================
 
 const necImg = new Image();
@@ -23,102 +23,45 @@ const necklaceImg = new Image();
 necklaceImg.src = "./models/IMG_6161.PNG";
 
 // ========================================
-// 現在選択中リング
+// 現在選択中
 // ========================================
 
 let currentRingImg = blueRingImg;
-
-// ========================================
-// ★ 現在選択中ネックレス
-// null = ネックレス無し
-// ========================================
-
 let currentNecklaceImg = null;
 
 // ========================================
-// カメラ制御
+// 検出結果保存用
 // ========================================
 
-let currentStream = null;
-let currentFacingMode = "environment";
+let handLandmarks = null;
+let poseLandmarks = null;
 
 // ========================================
-// リング用スムージング
+// カメラ
 // ========================================
 
-let smoothX = 0;
-let smoothY = 0;
-let smoothAngle = 0;
+async function startCamera() {
 
-// ========================================
-// ★ ネックレス用スムージング
-// ========================================
-
-let smoothNeckX = 0;
-let smoothNeckY = 0;
-let smoothNeckAngle = 0;
-let smoothNeckWidth = 0;
-
-// ========================================
-// カメラ開始
-// ========================================
-
-async function startCamera(facingMode) {
-
-  if (currentStream) {
-    currentStream.getTracks().forEach(track => track.stop());
-  }
-
-  try {
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: facingMode } }
+  const stream =
+    await navigator.mediaDevices.getUserMedia({
+      video: true
     });
 
-    video.srcObject = stream;
-    currentStream = stream;
+  video.srcObject = stream;
 
-  } catch (e) {
+  video.onloadedmetadata = () => {
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: facingMode }
-    });
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-    video.srcObject = stream;
-    currentStream = stream;
-  }
+    renderLoop();
+  };
 }
 
-startCamera(currentFacingMode);
+startCamera();
 
 // ========================================
-// カメラ切替ボタン
-// ========================================
-
-const switchBtn = document.createElement("button");
-
-switchBtn.innerText = "カメラ切替";
-
-switchBtn.style.position = "absolute";
-switchBtn.style.top = "20px";
-switchBtn.style.right = "20px";
-switchBtn.style.zIndex = "10";
-switchBtn.style.padding = "10px";
-
-document.body.appendChild(switchBtn);
-
-switchBtn.addEventListener("click", () => {
-
-  currentFacingMode =
-    currentFacingMode === "user"
-      ? "environment"
-      : "user";
-
-  startCamera(currentFacingMode);
-});
-
-// ========================================
-// リング選択UI
+// リングUI
 // ========================================
 
 const ringSelector = document.createElement("div");
@@ -129,37 +72,27 @@ ringSelector.style.left = "50%";
 ringSelector.style.transform = "translateX(-50%)";
 ringSelector.style.display = "flex";
 ringSelector.style.gap = "10px";
-ringSelector.style.zIndex = "10";
 
 document.body.appendChild(ringSelector);
-
-// ========================================
-// リングボタン生成関数
-// ========================================
 
 function createRingButton(label, img) {
 
   const btn = document.createElement("button");
 
   btn.innerText = label;
-  btn.style.padding = "10px";
 
-  btn.addEventListener("click", () => {
+  btn.onclick = () => {
     currentRingImg = img;
-  });
+  };
 
   ringSelector.appendChild(btn);
 }
-
-// ========================================
-// リングボタン
-// ========================================
 
 createRingButton("リング①", blueRingImg);
 createRingButton("リング②", orangeRingImg);
 
 // ========================================
-// ★ ネックレス選択UI
+// ネックレスUI
 // ========================================
 
 const necklaceSelector = document.createElement("div");
@@ -170,51 +103,34 @@ necklaceSelector.style.left = "50%";
 necklaceSelector.style.transform = "translateX(-50%)";
 necklaceSelector.style.display = "flex";
 necklaceSelector.style.gap = "10px";
-necklaceSelector.style.zIndex = "10";
 
 document.body.appendChild(necklaceSelector);
-
-// ========================================
-// ★ ネックレスボタン生成関数
-// ========================================
 
 function createNecklaceButton(label, img) {
 
   const btn = document.createElement("button");
 
   btn.innerText = label;
-  btn.style.padding = "10px";
 
-  btn.addEventListener("click", () => {
-
-    // ボタン押下でネックレス変更
+  btn.onclick = () => {
     currentNecklaceImg = img;
-  });
+  };
 
   necklaceSelector.appendChild(btn);
 }
 
-// ========================================
-// ★ ネックレス無しボタン
-// ========================================
-
+// OFF
 const offBtn = document.createElement("button");
 
-offBtn.innerText = "ネックレスOFF";
-offBtn.style.padding = "10px";
+offBtn.innerText = "OFF";
 
-offBtn.addEventListener("click", () => {
-
-  // ネックレス消去
+offBtn.onclick = () => {
   currentNecklaceImg = null;
-});
+};
 
 necklaceSelector.appendChild(offBtn);
 
-// ========================================
-// ★ ネックレスボタン
-// ========================================
-
+// ネックレス切替
 createNecklaceButton("①", necImg);
 createNecklaceButton("②", necklaceImg);
 
@@ -223,9 +139,8 @@ createNecklaceButton("②", necklaceImg);
 // ========================================
 
 const hands = new Hands({
-  locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-  }
+  locateFile: file =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 
 hands.setOptions({
@@ -236,13 +151,12 @@ hands.setOptions({
 });
 
 // ========================================
-// ★ MediaPipe Pose
+// MediaPipe Pose
 // ========================================
 
 const pose = new Pose({
-  locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-  }
+  locateFile: file =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
 });
 
 pose.setOptions({
@@ -253,34 +167,72 @@ pose.setOptions({
 });
 
 // ========================================
-// Hands結果
+// Hands結果保存
 // ========================================
 
 hands.onResults(results => {
-
-  if (!video.videoWidth) return;
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // カメラ描画
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // ========================================
-  // リング描画
-  // ========================================
 
   if (
     results.multiHandLandmarks &&
     results.multiHandLandmarks.length > 0
   ) {
 
-    const landmarks = results.multiHandLandmarks[0];
+    handLandmarks =
+      results.multiHandLandmarks[0];
 
-    const p13 = landmarks[13];
-    const p14 = landmarks[14];
+  } else {
+
+    handLandmarks = null;
+  }
+});
+
+// ========================================
+// Pose結果保存
+// ========================================
+
+pose.onResults(results => {
+
+  if (results.poseLandmarks) {
+
+    poseLandmarks =
+      results.poseLandmarks;
+
+  } else {
+
+    poseLandmarks = null;
+  }
+});
+
+// ========================================
+// 描画ループ
+// ========================================
+
+async function renderLoop() {
+
+  // MediaPipeへ送信
+  await hands.send({ image: video });
+  await pose.send({ image: video });
+
+  // Canvasクリア
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // カメラ映像
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  // ========================================
+  // リング描画
+  // ========================================
+
+  if (handLandmarks) {
+
+    const p13 = handLandmarks[13];
+    const p14 = handLandmarks[14];
 
     const x =
       (p13.x + p14.x) / 2 * canvas.width;
@@ -288,18 +240,10 @@ hands.onResults(results => {
     const y =
       (p13.y + p14.y) / 2 * canvas.height;
 
-    const smoothFactor = 0.5;
-
-    smoothX += (x - smoothX) * smoothFactor;
-    smoothY += (y - smoothY) * smoothFactor;
-
     const dx = p14.x - p13.x;
     const dy = p14.y - p13.y;
 
     const angle = Math.atan2(dy, dx);
-
-    smoothAngle +=
-      (angle - smoothAngle) * smoothFactor;
 
     const distance =
       Math.sqrt(dx * dx + dy * dy);
@@ -309,9 +253,9 @@ hands.onResults(results => {
 
     ctx.save();
 
-    ctx.translate(smoothX, smoothY);
+    ctx.translate(x, y);
 
-    ctx.rotate(smoothAngle + Math.PI / 2);
+    ctx.rotate(angle + Math.PI / 2);
 
     ctx.drawImage(
       currentRingImg,
@@ -323,109 +267,69 @@ hands.onResults(results => {
 
     ctx.restore();
   }
-});
 
-// ========================================
-// ★ Pose結果
-// ネックレス描画
-// ========================================
+  // ========================================
+  // ネックレス描画
+  // ========================================
 
-pose.onResults(results => {
+  if (
+    poseLandmarks &&
+    currentNecklaceImg
+  ) {
 
-  // ネックレス未選択なら終了
-  if (!currentNecklaceImg) return;
+    const leftShoulder =
+      poseLandmarks[11];
 
-  if (!results.poseLandmarks) return;
+    const rightShoulder =
+      poseLandmarks[12];
 
-  const landmarks = results.poseLandmarks;
+    const lx =
+      leftShoulder.x * canvas.width;
 
-  // 左右肩
-  const leftShoulder = landmarks[11];
-  const rightShoulder = landmarks[12];
+    const ly =
+      leftShoulder.y * canvas.height;
 
-  // Canvas座標
-  const lx = leftShoulder.x * canvas.width;
-  const ly = leftShoulder.y * canvas.height;
+    const rx =
+      rightShoulder.x * canvas.width;
 
-  const rx = rightShoulder.x * canvas.width;
-  const ry = rightShoulder.y * canvas.height;
+    const ry =
+      rightShoulder.y * canvas.height;
 
-  // 首中心
-  const centerX = (lx + rx) / 2;
-  const centerY = (ly + ry) / 2 + 40;
+    const centerX = (lx + rx) / 2;
+    const centerY = (ly + ry) / 2 + 40;
 
-  // 肩幅
-  const shoulderWidth =
-    Math.hypot(rx - lx, ry - ly);
+    const shoulderWidth =
+      Math.hypot(rx - lx, ry - ly);
 
-  // ネックレスサイズ
-  const necklaceWidth =
-    shoulderWidth * 1.8;
+    const necklaceWidth =
+      shoulderWidth * 1.8;
 
-  // 比率維持
-  const aspect =
-    currentNecklaceImg.height /
-    currentNecklaceImg.width;
+    const aspect =
+      currentNecklaceImg.height /
+      currentNecklaceImg.width;
 
-  const necklaceHeight =
-    necklaceWidth * aspect;
+    const necklaceHeight =
+      necklaceWidth * aspect;
 
-  // 回転
-  const angle =
-    Math.atan2(ry - ly, rx - lx);
+    const angle =
+      Math.atan2(ry - ly, rx - lx);
 
-  // スムージング
-  const smoothFactor = 0.35;
+    ctx.save();
 
-  smoothNeckX +=
-    (centerX - smoothNeckX) * smoothFactor;
+    ctx.translate(centerX, centerY);
 
-  smoothNeckY +=
-    (centerY - smoothNeckY) * smoothFactor;
+    ctx.rotate(angle);
 
-  smoothNeckAngle +=
-    (angle - smoothNeckAngle) * smoothFactor;
+    ctx.drawImage(
+      currentNecklaceImg,
+      -necklaceWidth / 2,
+      -necklaceHeight / 4,
+      necklaceWidth,
+      necklaceHeight
+    );
 
-  smoothNeckWidth +=
-    (necklaceWidth - smoothNeckWidth) * smoothFactor;
-
-  // 描画
-  ctx.save();
-
-  ctx.translate(
-    smoothNeckX,
-    smoothNeckY
-  );
-
-  ctx.rotate(smoothNeckAngle);
-
-  ctx.drawImage(
-    currentNecklaceImg,
-    -smoothNeckWidth / 2,
-    -necklaceHeight / 4,
-    smoothNeckWidth,
-    necklaceHeight
-  );
-
-  ctx.restore();
-});
-
-// ========================================
-// フレーム処理
-// ========================================
-
-async function renderLoop() {
-
-  if (video.readyState >= 2) {
-
-    // Hands
-    await hands.send({ image: video });
-
-    // Pose
-    await pose.send({ image: video });
+    ctx.restore();
   }
 
   requestAnimationFrame(renderLoop);
 }
-
-renderLoop();
