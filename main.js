@@ -210,7 +210,6 @@ hands.onResults(results => {
 
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-}
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     const landmarks = results.multiHandLandmarks[0];
@@ -254,6 +253,7 @@ ctx.drawImage(
 );
 
 ctx.restore();
+ }
 });
 
 //==ネックレス==
