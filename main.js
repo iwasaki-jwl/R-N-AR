@@ -17,10 +17,10 @@ orangeRingImg.src = "./models/orangeR_5785.PNG";
 // ========================================
 
 const necImg = new Image();
-necImg.src = "./models/nec.PNG";
+necImg.src = "./models/IMG_6158.PNG";
 
 const necklaceImg = new Image();
-necklaceImg.src = "./models/neclace.PNG";
+necklaceImg.src = "./models/IMG_6161.PNG";
 
 // ========================================
 // 現在選択中リング
