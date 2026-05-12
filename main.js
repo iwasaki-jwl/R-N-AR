@@ -204,22 +204,12 @@ faceMesh.setOptions({
 });
 
 // ===== 検出処理 =====
+//==指輪==
 hands.onResults(results => {
   if (!video.videoWidth) return;
 
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-
-async function renderLoop() {
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // ★ここに移動
-
-  if (video.readyState >= 2) {
-    await hands.send({ image: video });
-    await faceMesh.send({ image: video });
-  }
-
-  requestAnimationFrame(renderLoop);
 }
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -231,8 +221,43 @@ async function renderLoop() {
     const x = (p13.x + p14.x) / 2 * canvas.width;
     const y = (p13.y + p14.y) / 2 * canvas.height;
 
-    //ネック検出
-    faceMesh.onResults(results => {
+// スムージング強さ（0〜1）
+    const smoothFactor = 0.5;
+
+// 座標を滑らかに更新
+smoothX += (x - smoothX) * smoothFactor;
+smoothY += (y - smoothY) * smoothFactor;
+
+    const dx = p14.x - p13.x;
+    const dy = p14.y - p13.y;
+    
+    const angle = Math.atan2(dy, dx);
+    smoothAngle += (angle - smoothAngle) * smoothFactor;
+//　〇リングのサイズ
+    // 指の関節距離
+const distance = Math.sqrt(dx * dx + dy * dy);
+
+// リングサイズ計算
+const ringSize = distance * canvas.width * 0.7;
+
+ctx.save();
+
+ctx.translate(smoothX, smoothY);
+ctx.rotate(smoothAngle + Math.PI / 2);
+
+ctx.drawImage(
+  currentRingImg,
+  -ringSize / 2,
+  -ringSize / 2,
+  ringSize,
+  ringSize
+);
+
+ctx.restore();
+});
+
+//==ネックレス==
+faceMesh.onResults(results => {
 
   if (!video.videoWidth) return;
 
@@ -273,44 +298,10 @@ async function renderLoop() {
   }
 });
 
-// スムージング強さ（0〜1）
-    const smoothFactor = 0.5;
-
-// 座標を滑らかに更新
-smoothX += (x - smoothX) * smoothFactor;
-smoothY += (y - smoothY) * smoothFactor;
-
-    const dx = p14.x - p13.x;
-    const dy = p14.y - p13.y;
-    
-    const angle = Math.atan2(dy, dx);
-    smoothAngle += (angle - smoothAngle) * smoothFactor;
-//　〇リングのサイズ
-    // 指の関節距離
-const distance = Math.sqrt(dx * dx + dy * dy);
-
-// リングサイズ計算
-const ringSize = distance * canvas.width * 0.7;
-
-ctx.save();
-
-ctx.translate(smoothX, smoothY);
-ctx.rotate(smoothAngle + Math.PI / 2);
-
-ctx.drawImage(
-  currentRingImg,
-  -ringSize / 2,
-  -ringSize / 2,
-  ringSize,
-  ringSize
-);
-
-ctx.restore();
-  }
-});
 
 // ===== フレーム処理（Cameraクラス使わない版）=====
 async function renderLoop() {
+   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (video.readyState >= 2) {
     await hands.send({ image: video });
     await faceMesh.send({ image: video });
