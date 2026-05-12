@@ -28,7 +28,7 @@ necklaceImg.src = "./models/IMG_6158.PNG";
 
 
 // 現在選択中のリング
-let currentRingImg =null;
+let currentRingImg =blueRingImg;
 
 // ===== カメラ制御 =====
 let currentStream = null;
