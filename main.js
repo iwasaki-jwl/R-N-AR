@@ -346,7 +346,7 @@ pose.onResults(results => {
 
     // ネックレスサイズ
     const necklaceWidth =
-      Math.abs(dx) * canvas.width * 1.3;
+      Math.abs(dx) * canvas.width * 0.7;
 
     const necklaceHeight =
       necklaceWidth * 0.6;
