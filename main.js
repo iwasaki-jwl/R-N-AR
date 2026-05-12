@@ -286,6 +286,7 @@ pose.onResults(results => {
     const y =
       (leftShoulder.y + rightShoulder.y) / 2
       * canvas.height;
+      + canvas.height * 0.05;
 
     // スムージング
     neckX += (x - neckX) * 0.5;
