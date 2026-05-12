@@ -80,6 +80,18 @@ document.body.appendChild(switchBtn);
 switchBtn.addEventListener("click", () => {
   currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
   startCamera(currentFacingMode);
+//鏡モード
+  if (currentFacingMode === "user") {
+
+  video.style.transform = "scaleX(-1)";
+  canvas.style.transform = "scaleX(-1)";
+
+} else {
+
+  video.style.transform = "scaleX(1)";
+  canvas.style.transform = "scaleX(1)";
+}
+  
 });
 
 // ===== リング選択ボタン =====
