@@ -328,14 +328,12 @@ pose.onResults(results => {
     const rightShoulder = landmarks[12];
 
     // 肩中央
-    const x =
-      (leftShoulder.x + rightShoulder.x) / 2
-      * canvas.width;
+const x =
+  (leftShoulder.x + rightShoulder.x) / 2 * canvas.width;
 
-   const y =
-  canvas.height -
-  ((leftShoulder.y + rightShoulder.y) / 2 * canvas.height);
-
+const y =
+  (leftShoulder.y + rightShoulder.y) / 2 * canvas.height;
+    
     // スムージング
     neckX += (x - neckX) * 0.5;
     neckY += (y - neckY) * 0.5;
