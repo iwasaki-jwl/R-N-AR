@@ -22,6 +22,9 @@ zirRingImg.src = "./models/IMG_6111.PNG";
 const opRingImg = new Image();
 opRingImg.src = "./models/IMG_6109.PNG";
 
+const necklaceImg = new Image();
+necklaceImg.src = "./models/IMG_6161.PNG";
+
 
 
 // 現在選択中のリング
@@ -35,6 +38,9 @@ let currentFacingMode = "environment"; // 初期は外カメラ
 let smoothX = 0;
 let smoothY = 0;
 let smoothAngle = 0;
+
+let neckX = 0;
+let neckY = 0;
 
 async function startCamera(facingMode) {
   // 既存ストリーム停止
@@ -183,6 +189,20 @@ hands.setOptions({
   minTrackingConfidence: 0.7
 });
 
+// ===== FaceMesh（ネックレス用）=====
+const faceMesh = new FaceMesh({
+  locateFile: (file) => {
+    return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+  }
+});
+
+faceMesh.setOptions({
+  maxNumFaces: 1,
+  refineLandmarks: true,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
+
 // ===== 検出処理 =====
 hands.onResults(results => {
   if (!video.videoWidth) return;
@@ -190,7 +210,17 @@ hands.onResults(results => {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+async function renderLoop() {
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height); // ★ここに移動
+
+  if (video.readyState >= 2) {
+    await hands.send({ image: video });
+    await faceMesh.send({ image: video });
+  }
+
+  requestAnimationFrame(renderLoop);
+}
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     const landmarks = results.multiHandLandmarks[0];
@@ -200,6 +230,48 @@ hands.onResults(results => {
 
     const x = (p13.x + p14.x) / 2 * canvas.width;
     const y = (p13.y + p14.y) / 2 * canvas.height;
+
+    //ネック検出
+    faceMesh.onResults(results => {
+
+  if (!video.videoWidth) return;
+
+  if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+
+    const face = results.multiFaceLandmarks[0];
+
+    // ★首位置の目安（あご下）
+    const chin = face[152];   // あご先
+    const left = face[234];   // 左頬付近
+    const right = face[454];  // 右頬付近
+
+    const x = (left.x + right.x) / 2 * canvas.width;
+    const y = chin.y * canvas.height + 40; // 少し下にずらす（首位置）
+
+    // スムージング
+    neckX += (x - neckX) * 0.5;
+    neckY += (y - neckY) * 0.5;
+
+    // ネックレスサイズ（顔幅ベース）
+    const dx = right.x - left.x;
+    const necklaceSize = Math.abs(dx) * canvas.width * 1.5;
+
+    // ★同じcanvasに描画（ここ重要）
+    ctx.save();
+
+    ctx.translate(neckX, neckY);
+
+    ctx.drawImage(
+      necklaceImg,
+      -necklaceSize / 2,
+      -necklaceSize / 2,
+      necklaceSize,
+      necklaceSize
+    );
+
+    ctx.restore();
+  }
+});
 
 // スムージング強さ（0〜1）
     const smoothFactor = 0.5;
@@ -241,6 +313,7 @@ ctx.restore();
 async function renderLoop() {
   if (video.readyState >= 2) {
     await hands.send({ image: video });
+    await faceMesh.send({ image: video });
   }
   requestAnimationFrame(renderLoop);
 }
