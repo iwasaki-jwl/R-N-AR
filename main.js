@@ -333,3 +333,5 @@ async function renderLoop() {
 
   requestAnimationFrame(renderLoop);
 }
+
+renderLoop();
