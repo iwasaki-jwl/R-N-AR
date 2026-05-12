@@ -22,10 +22,14 @@ zirRingImg.src = "./models/IMG_6111.PNG";
 const opRingImg = new Image();
 opRingImg.src = "./models/IMG_6109.PNG";
 
-const necklaceImg = new Image();
-necklaceImg.src = "./models/IMG_6158.PNG";
+const necklaceImg1 = new Image();
+necklaceImg1.src = "./models/IMG_6158.PNG";
 
+const necklaceImg2 = new Image();
+necklaceImg2.src = "./models/IMG_6161.PNG";
 
+// 現在選択中のネック
+let currentNecklaceImg = necklaceImg1;
 
 // 現在選択中のリング
 let currentRingImg =blueRingImg;
@@ -93,6 +97,51 @@ switchBtn.addEventListener("click", () => {
 }
   
 });
+
+// ===== ネックレス選択ボタン =====
+
+// ボタンを入れる箱
+const necklaceSelector = document.createElement("div");
+
+necklaceSelector.style.position = "absolute";
+
+// ★リングボタンより上
+necklaceSelector.style.bottom = "80px";
+
+necklaceSelector.style.left = "50%";
+necklaceSelector.style.transform = "translateX(-50%)";
+
+necklaceSelector.style.display = "flex";
+necklaceSelector.style.gap = "10px";
+necklaceSelector.style.zIndex = "10";
+
+document.body.appendChild(necklaceSelector);
+
+
+// ① ネックレス
+const necklaceBtn1 = document.createElement("button");
+
+necklaceBtn1.innerText = "①";
+necklaceBtn1.style.padding = "10px";
+
+necklaceBtn1.addEventListener("click", () => {
+  currentNecklaceImg = necklaceImg1;
+});
+
+necklaceSelector.appendChild(necklaceBtn1);
+
+
+//  ② ネックレス
+const necklaceBtn2 = document.createElement("button");
+
+necklaceBtn2.innerText = "②";
+necklaceBtn2.style.padding = "10px";
+
+necklaceBtn2.addEventListener("click", () => {
+  currentNecklaceImg = necklaceImg2;
+});
+
+necklaceSelector.appendChild(necklaceBtn2);
 
 // ===== リング選択ボタン =====
 
@@ -319,7 +368,7 @@ pose.onResults(results => {
     ctx.rotate(angle);
 
     ctx.drawImage(
-      necklaceImg,
+      currentNecklaceImg,
       -necklaceWidth / 2,
       -necklaceHeight / 2,
       necklaceWidth,
