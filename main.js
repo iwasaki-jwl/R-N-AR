@@ -23,7 +23,7 @@ const opRingImg = new Image();
 opRingImg.src = "./models/IMG_6109.PNG";
 
 const necklaceImg = new Image();
-necklaceImg.src = "./models/IMG_6161.PNG";
+necklaceImg.src = "./models/IMG_6158.PNG";
 
 
 
