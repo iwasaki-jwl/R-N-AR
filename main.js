@@ -362,7 +362,7 @@ const y =
     ctx.translate(neckX, neckY);
 
     // 肩角度に回転
-    ctx.rotate(angle);
+    ctx.rotate(angle + Math.PI);
 
     ctx.drawImage(
       currentNecklaceImg,
